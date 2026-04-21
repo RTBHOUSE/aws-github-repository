@@ -1,7 +1,11 @@
 locals {
   import = local.enabled && var.import
 
-  environments_exists = local.import ? data.github_repository_environments.default[var.repository.name].environments[*].name : []
+  import_environments = local.import && length(local.environments) > 0
+  environments_exists = local.import_environments ? [
+    for environment in data.github_repository_environments.default[var.repository.name].environments[*].name :
+    environment if can(local.environments[environment])
+  ] : []
 }
 
 # Check if the repository exists
@@ -23,7 +27,7 @@ import {
 }
 
 data "github_repository_environments" "default" {
-  for_each   = toset(local.import ? [var.repository.name] : [])
+  for_each   = toset(local.import_environments ? [var.repository.name] : [])
   repository = each.value
 }
 
