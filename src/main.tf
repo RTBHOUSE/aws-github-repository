@@ -63,7 +63,7 @@ module "repository" {
   variables                             = local.variables
   secrets                               = local.secrets
   deploy_keys                           = var.deploy_keys
-  webhooks                              = var.webhooks
+  webhooks                              = local.webhooks
   labels                                = var.labels
   teams                                 = var.teams
   users                                 = var.users
@@ -108,6 +108,20 @@ locals {
     }
   }
 
+  webhooks = {
+    for k, v in coalesce(var.webhooks, {}) : k => {
+      active       = v.active
+      events       = v.events
+      url          = v.url
+      content_type = v.content_type
+      insecure_ssl = v.insecure_ssl
+      secret = v.secret != null ? (
+        startswith(v.secret, "ssm://") ? nonsensitive(data.aws_ssm_parameter.default[v.secret].value) :
+        startswith(v.secret, "asm://") ? nonsensitive(data.aws_secretsmanager_secret_version.default[v.secret].secret_string) : v.secret
+      ) : null
+    }
+  }
+
   ssm_parameters = merge(flatten([
     [
       {
@@ -115,6 +129,9 @@ locals {
       },
       {
         for k, v in coalesce(var.secrets, {}) : v => trimprefix(v, "ssm://") if startswith(v, "ssm://")
+      },
+      {
+        for k, v in coalesce(var.webhooks, {}) : v.secret => trimprefix(v.secret, "ssm://") if v.secret != null && startswith(v.secret, "ssm://")
       },
     ],
     [
@@ -137,6 +154,9 @@ locals {
       },
       {
         for k, v in coalesce(var.secrets, {}) : v => trimprefix(v, "asm://") if startswith(v, "asm://")
+      },
+      {
+        for k, v in coalesce(var.webhooks, {}) : v.secret => trimprefix(v.secret, "asm://") if v.secret != null && startswith(v.secret, "asm://")
       },
     ],
     [
