@@ -60,14 +60,15 @@ module "repository" {
   custom_properties = var.custom_properties
   environments      = local.environments
 
-  variables   = local.variables
-  secrets     = local.secrets
-  deploy_keys = var.deploy_keys
-  webhooks    = var.webhooks
-  labels      = var.labels
-  teams       = var.teams
-  users       = var.users
-  rulesets    = var.rulesets
+  variables                             = local.variables
+  secrets                               = local.secrets
+  deploy_keys                           = var.deploy_keys
+  webhooks                              = var.webhooks
+  labels                                = var.labels
+  teams                                 = var.teams
+  users                                 = var.users
+  organization_repository_roles_enabled = var.organization_repository_roles_enabled
+  rulesets                              = var.rulesets
 }
 
 locals {
